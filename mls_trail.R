@@ -3,7 +3,7 @@
 # SiteID: ELR1-QB, ELR1-QA
 # Author: Isabella Bowman
 # Created: May 04 2025
-# Last updated: May 04 2025
+# Last updated: May 05 2025
 # Description: Processing mls port data
 
 # https://github.com/bowmanii
@@ -43,28 +43,28 @@ cm_to_m <- 0.01 # divers record in cm H20, convert to m H20
 #well3 <- ELR2-QA (ports 1-9) (1 = deepest, 9 = shallowest)
 
 # well elevations (m amsl)
-elev1 <- 377.225 # gs elev. not gs elev = 378.421
-elev2 <- 377.446 # gs elev. not gs elev = 378.405
-elev3 <- 402.523 # concrete pad elev.
+#elev1 <- 377.225 # gs elev. not gs elev = 378.421
+#elev2 <- 377.446 # gs elev. not gs elev = 378.405
+#elev3 <- 402.523 # concrete pad elev.
 
 # mls port elevations
-elev1_1 <- elev1 + 0.987 # port 1 ELR1-QB
-elev1_2 <- elev1 + 0.981 # port 2 ELR1-QB
-elev1_3 <- elev1 + 0.980 # port 3 ELR1-QB
-elev1_4 <- elev1 + 0.978 # port 4 ELR1-QB
-elev1_5 <- elev1 + 0.995 # port 5 ELR1-QB
-elev2_6 <- elev2 + 1.099 # port 6 ELR1-QA
-elev2_7 <- elev2 + 1.116 # port 7 ELR1-QA
-elev2_8 <- elev2 + 1.080 # port 8 ELR1-QA
-elev2_9 <- elev2 + 1.106 # port 9 ELR1-QA
-elev2_10 <- elev2 + 1.106 # port 10 ELR1-QA
-elev3_1 <- elev3 + 0.862 # port 1 ELR2-QA
-elev3_5 <- elev3 + 0.861 # port 5 ELR2-QA
-elev3_9 <- elev3 + 0.861 # port 9 ELR2-QA
+#elev1_1 <- elev1 + 0.987 # port 1 ELR1-QB
+#elev1_2 <- elev1 + 0.981 # port 2 ELR1-QB
+#elev1_3 <- elev1 + 0.980 # port 3 ELR1-QB
+#elev1_4 <- elev1 + 0.978 # port 4 ELR1-QB
+#elev1_5 <- elev1 + 0.995 # port 5 ELR1-QB
+#elev2_6 <- elev2 + 1.099 # port 6 ELR1-QA
+#elev2_7 <- elev2 + 1.116 # port 7 ELR1-QA
+#elev2_8 <- elev2 + 1.080 # port 8 ELR1-QA
+#elev2_9 <- elev2 + 1.106 # port 9 ELR1-QA
+#elev2_10 <- elev2 + 1.106 # port 10 ELR1-QA
+#elev3_1 <- elev3 + 0.862 # port 1 ELR2-QA
+#elev3_5 <- elev3 + 0.861 # port 5 ELR2-QA
+#elev3_9 <- elev3 + 0.861 # port 9 ELR2-QA
 
 # time period
-start <- as.POSIXct("2024-03-31 12:00:00", tz = "UTC") # same as TD
-end <- as.POSIXct("2024-10-22 12:00:00", tz = "UTC") 
+#start <- as.POSIXct("2024-03-31 12:00:00", tz = "UTC") # same as TD
+#end <- as.POSIXct("2024-10-22 12:00:00", tz = "UTC") 
 
 ###############################################################################
 #### Data Manipulation ####
@@ -81,7 +81,9 @@ setDT(loc)
 # redefine DT to only include for ELR1-QB
 #loc <- loc[well == "ELR1-QB"]
 #loc <- loc[well %in% c("ELR1-QB", "ELR1-R1")]
-loc <- loc[well == "ELR1-QB" | serial == "R9455"]
+#loc <- loc[well == "ELR1-QB" | serial == "R9455"]
+#loc <- loc[well == "ELR1-QB" | serial == "R9455" | well == "ELR1-QA"]
+loc <- loc[well == "ELR2-QA" | serial == "R9455"]
 
 # list all file names from "data" folder, return full file path
 fn <- list.files(file_dir, full.names = TRUE)
@@ -160,7 +162,7 @@ p_wl <- plot_ly(wl_sub,
                 y = ~head_masl, #or head_masl, or value_m, value_adj, 
                 #head_masl_cf_air, head_masl_cf_man, etc
                 color = ~port,
-                colors = plasma(5),
+                colors = plasma(9),
                 name = ~port,
                 type = "scatter", mode = "lines")
 
@@ -177,7 +179,9 @@ p_baro <- plot_ly(wl_sub,
 
 s0 <- subplot(p_wl, p_baro, shareX = TRUE, nrows = 2, heights = c(0.7, 0.3))%>%
   layout(
-    title = "ELR1-QB: MLS Ports", 
+    title = list(text = "ELR2-QA: MLS Ports", # ELR1-QA, ELR1-QB, ELR1-QA/QB, ELR2-QA
+                 y = 0.98,
+                 font = list(size = 18)), 
     xaxis = list(title = "Date and time",
                  nticks = 20,
                  tickangle = -45),
@@ -188,6 +192,6 @@ s0 <- subplot(p_wl, p_baro, shareX = TRUE, nrows = 2, heights = c(0.7, 0.3))%>%
   )
 
 
-interpolate <- approx(wl_sub$datetime, wl_sub$baro)
+#interpolate <- approx(wl_sub$datetime, wl_sub$baro)
 
 
