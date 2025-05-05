@@ -79,7 +79,9 @@ loc <- read_xlsx("./metadata/transducer_locations_mls.xlsx", na = "NA")
 setDT(loc)
 
 # redefine DT to only include for ELR1-QB
-loc <- loc[well == "ELR1-QB"]
+#loc <- loc[well == "ELR1-QB"]
+#loc <- loc[well %in% c("ELR1-QB", "ELR1-R1")]
+loc <- loc[well == "ELR1-QB" | serial == "R9455"]
 
 # list all file names from "data" folder, return full file path
 fn <- list.files(file_dir, full.names = TRUE)
@@ -89,44 +91,103 @@ fn <- fn[basename(fn) %in% loc$file_name]
 # create user defined function to read all csv files
 read_csv <- function(x) {
   transducer_data <- fread(x, 
-                           sep = ",",
-                           header = TRUE,
-                           skip = 51)
+                           sep = ",",     # needed?
+                           header = TRUE, # does data have a header?
+                           skip = 51)     # exclude rows w/out data
   return(transducer_data)
 }
 
 # use sapply to create a list, but with the file names (lapply wont keep file names)
 # simplify must be false to keep it as list or else it returns as a matrix
-list <- sapply(fn, read_csv, simplify = FALSE, USE.NAMES = TRUE) 
+#list <- sapply(fn, read_csv, simplify = FALSE, USE.NAMES = TRUE) 
+
 # bind all lists, keeping col of which file it came from
-pr <- rbindlist(list, idcol = TRUE)
+#pr <- rbindlist(list, idcol = TRUE)
 
-# optional choice to combine 2 lines of code into 1
-pr2 <- rbindlist(sapply(fn, read_csv, simplify = FALSE, USE.NAMES = TRUE), idcol = TRUE)
+# optional choice to combine the above 2 lines of code into 1
+pr <- rbindlist(sapply(fn, read_csv, simplify = FALSE, USE.NAMES = TRUE), idcol = TRUE)
 
-#simply F to keep it a list or else it turns into matrix
-list2 <- lapply(fn, read_csv)
-pr3 <- rbindlist(list, idcol = TRUE)
+# rename columns
+colnames(pr) <- c("file_name", "datetime", "value_cm", "temp")
 
-# read data in as data table
-# use lapply to create list of files, use function to read, bind all results into 1 datatable
-pr <- rbindlist(lapply(fn, read_csv), idcol = "file")
-pr2 <- (rbindlist(sapply(fn, read_csv, simplify = FALSE, USE.NAMES = TRUE)))
-# will get warnings: it discards last entry which is text and should be ignored
+# clean up the id col by taking away "data/"
+pr[, file_name := basename(file_name)]
+
+# fix datetime
+pr[, datetime := format(strptime(datetime, "%Y/%m/%d %H:%M:%S"), format = "%Y-%m-%d %H:%M:%S")] # corrects format
+pr[, datetime := as.POSIXct(datetime, tz = "America/Toronto")] # changes type, sets timezone
+pr[, datetime := with_tz(datetime, tzone = "UTC")] # converts to UTC
+
+# remove unneeded col in loc before merging
+loc[, c("site", "is_baro", "use") := NULL]
+# merge loc and pr dt by the col "file_name"
+pr <- loc[pr, on = "file_name"]
+
+# create baro dt
+#baro <- pr[serial == "R1111111"]
+baro <- pr[port == "baro"]
+# discard unneeded cols
+baro[, c("well", "serial", "port", "screen_top", "screen_bottom", "monitoring_location") := NULL]
+# create wl dt
+wl <- pr[!port %in% c("baro")]
+
+# merge baro as a col in wl dt
+wl <- baro[, .(datetime, baro_cm = value_cm)][wl, on = "datetime", nomatch = NA]
+
+# convert all pressures to m H20
+wl[, baro := baro_cm * cm_to_m]
+wl[, value := value_cm * cm_to_m]
+
+# calculate elevation of transducer monitoring point
+#wl[, sensor_elev2 := (elev1 + stickup) - monitoring_location]
+wl[, sensor_elev := (elev + stickup) - monitoring_location]
+# calculate head
+wl[, head_masl := sensor_elev + (value - baro)]
+
+# sort dt by date time (ascending order)
+setkey(wl, datetime)
+
+###############################################################################
+#### Data Subsets ####
+
+wl_sub <- wl
+
+###############################################################################
+#### Plots ####
+
+p_wl <- plot_ly(wl_sub,
+                x = ~datetime,
+                y = ~head_masl, #or head_masl, or value_m, value_adj, 
+                #head_masl_cf_air, head_masl_cf_man, etc
+                color = ~port,
+                colors = plasma(5),
+                name = ~port,
+                type = "scatter", mode = "lines")
+
+# plot baro
+p_baro <- plot_ly(wl_sub,
+                  x = ~datetime,
+                  y = ~baro,
+                  line = list(color = "#ee8326"),
+                  name = "Baro",
+                  type = "scatter", mode = "lines")
+
+###############################################################################
+#### Subplots ####
+
+s0 <- subplot(p_wl, p_baro, shareX = TRUE, nrows = 2, heights = c(0.7, 0.3))%>%
+  layout(
+    title = "ELR1-QB: MLS Ports", 
+    xaxis = list(title = "Date and time",
+                 nticks = 20,
+                 tickangle = -45),
+    yaxis = list(title = "Head (m asl)"), 
+                 #range = c(367, 373.5)), 
+    yaxis2 = list(title = "Pressure (m H20)"), # Δ Pressure (m H20)
+    legend = list(traceorder = "reversed")
+  )
 
 
-pr[, file := gsub(file_dir, " ", file, fixed = TRUE)]
-
-pr4 <- rbindlist(sapply(fn, read_csv, simplify = FALSE, USE.NAMES = TRUE), idcol = TRUE)
-
-
-
-
-
-
-
-
-
-
+interpolate <- approx(wl_sub$datetime, wl_sub$baro)
 
 
