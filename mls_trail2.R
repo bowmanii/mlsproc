@@ -85,7 +85,8 @@ setDT(loc)
 #loc <- loc[well == "ELR1-QB" | serial == "R9455"]
 #loc <- loc[well == "ELR1-QB" | serial == "R9455" | well == "ELR1-QA"]
 #loc <- loc[well == "ELR2-QA" | serial == "R9455"]
-loc <- loc[well == "ELR1-QB" | serial == "213655"]
+#loc <- loc[well == "ELR1-QA" | serial == "213655"]
+loc <- loc[well == "ELR1-QB" | serial == "213655" | well == "ELR1-QA"]
 
 # list all file names from "data" folder, return full file path
 fn <- list.files(file_dir, full.names = TRUE)
@@ -109,7 +110,9 @@ read_csv <- function(x) {
 #pr <- rbindlist(list, idcol = TRUE)
 
 # optional choice to combine the above 2 lines of code into 1
-pr <- rbindlist(sapply(fn[c(1:7, 10:19)], read_csv, simplify = FALSE, USE.NAMES = TRUE), idcol = TRUE)
+#pr <- rbindlist(sapply(fn[c(1:7, 10:19)], read_csv, simplify = FALSE, USE.NAMES = TRUE), idcol = TRUE) #QB
+#pr <- rbindlist(sapply(fn[c(1:5, 8:16)], read_csv, simplify = FALSE, USE.NAMES = TRUE), idcol = TRUE) #QA
+pr <- rbindlist(sapply(fn[c(1:12, 15:33)], read_csv, simplify = FALSE, USE.NAMES = TRUE), idcol = TRUE) #QA/QB
 
 # rename columns
 colnames(pr) <- c("file_name", "datetime", "value_cm", "temp")
@@ -128,7 +131,7 @@ loc[, c("site", "is_baro", "use") := NULL]
 pr <- loc[pr, on = "file_name"]
 
 # read RBR
-pr_b <- rsk::read_rsk(fn[c(8:9)],
+pr_b <- rsk::read_rsk(fn[c(13:14)], # 8:9, 6:7, 13:14
                       return_data_table = TRUE,
                       include_params = c('file_name'),
                       simplify_names = TRUE,
@@ -173,7 +176,7 @@ p_wl <- plot_ly(wl_sub,
                 y = ~head_masl, #or head_masl, or value_m, value_adj, 
                 #head_masl_cf_air, head_masl_cf_man, etc
                 color = ~port,
-                colors = plasma(5),
+                colors = plasma(10), # 5, 10, 9
                 name = ~port,
                 type = "scatter", mode = "lines")
 
@@ -199,14 +202,14 @@ p_baro <- plot_ly(pr_b[as.numeric(datetime) %% 300 == 0],
 
 s0 <- subplot(p_wl, p_baro, shareX = TRUE, nrows = 2, heights = c(0.7, 0.3))%>%
   layout(
-    title = list(text = "ELR1-QB: MLS Ports", # ELR1-QA, ELR1-QB, ELR1-QA/QB, ELR2-QA
+    title = list(text = "ELR1-QA/QB: MLS Ports", # ELR1-QA, ELR1-QB, ELR1-QA/QB, ELR2-QA
                  y = 0.98,
                  font = list(size = 18)), 
     xaxis = list(title = "Date and time",
                  nticks = 20,
                  tickangle = -45),
-    yaxis = list(title = "Head (m asl)"), 
-                 #range = c(367, 373.5)), 
+    yaxis = list(title = "Head (m asl)", 
+                 range = c(360, 390)), 
     yaxis2 = list(title = "Pressure (m H20)"), # Δ Pressure (m H20)
     legend = list(traceorder = "reversed")
   )
