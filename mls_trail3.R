@@ -227,7 +227,7 @@ wl[, head_masl := sensor_elev + (value - baro)]
 setkey(wl, datetime)
 
 # get correction factors 
-wl_cf1 <- wl[datetime %in% c(manual_well1, manual_well2)]
+#wl_cf1 <- wl[datetime %in% c(manual_well1, manual_well2)]
 wl_cf1 <- wl[datetime == manual_well1]
 wl_cf2 <- wl[datetime == manual_well2]
 wl_cf2 <- wl_cf2[port %in% c("06", "07", "08", "09", "10")]
@@ -242,6 +242,9 @@ wl <- wl_cf[, .(serial, cf = cf)][wl, on = "serial"]
 # wl corrected
 wl[, head_masl_cf := head_masl + cf]
 
+#manual_well3 <- as.POSIXct("2024-10-22 15:00:00", tz = "UTC")
+#wl_cf3 <- wl[datetime == manual_well3]
+
 ###############################################################################
 #### Data Subsets ####
 
@@ -252,7 +255,7 @@ wl_sub <- wl
 
 p_wl <- plot_ly(wl_sub,
                 x = ~datetime,
-                y = ~head_masl_cf, #or head_masl, or value_m, value_adj, 
+                y = ~head_masl, #or head_masl, or value_m, value_adj, 
                 #head_masl_cf, head_masl_cf_man, etc
                 color = ~port,
                 colors = plasma(10), # 5, 10, 9
@@ -317,8 +320,8 @@ s1 <- subplot(p_wl, p_baro, p_rain, p_cw, shareX = TRUE, nrows = 4, heights = c(
     xaxis = list(title = "Date and time",
                  nticks = 20,
                  tickangle = -45),
-    yaxis = list(title = "Head (m asl)", 
-                 range = c(368, 375)), 
+    yaxis = list(title = "Head (m asl)"), 
+                # range = c(368, 375)), 
     yaxis2 = list(title = "Pressure (m H20)"), # Δ Pressure (m H20)
     legend = list(traceorder = "reversed")
   )
