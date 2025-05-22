@@ -3,7 +3,7 @@
 # SiteID: ELR1-QB, ELR1-QA
 # Author: Isabella Bowman
 # Created: May 17 2025
-# Last updated: May 18 2025
+# Last updated: May 22 2025
 # Description: Processing mls port data
 
 # https://github.com/bowmanii
@@ -328,4 +328,20 @@ s1 <- subplot(p_wl, p_baro, p_rain, p_cw, shareX = TRUE, nrows = 4, heights = c(
 
 #interpolate <- approx(wl_sub$datetime, wl_sub$baro)
 
+###############################################################################
+#### Extract Processed Data ####
+
+# create DT for vertical head profiles
+#vhp <- wl[datetime %in% as.POSIXct(c("2024-05-12 8:45:00", "2024-05-18 12:25:00"), tz = "UTC")] #old choice
+vhp <- wl_sub[datetime %in% as.POSIXct(c("2024-04-05 18:35:00", "2024-04-05 15:50:00",
+                                         "2024-05-12 12:45:00", "2024-05-18 18:35:00", 
+                                         "2024-05-31 18:15:00", "2024-06-03 18:05:00",
+                                         "2024-06-25 21:50:00", "2024-07-09 17:35:00", 
+                                         "2024-07-25 14:00:00", "2024-07-25 19:00:00",
+                                         "2024-07-25 21:45:00", "2024-09-15 22:15:00",
+                                         "2024-09-22 21:00:00"), tz = "UTC")]
+
+# shorten table
+vhp <- vhp[, list(datetime, port, head_masl_cf, head_masl)]
+write.csv(vhp, "out/ELR1-QA_QB_vhp_v1.csv")
 

@@ -217,7 +217,6 @@ setkey(wl, datetime)
 
 # get correction factors 
 wl_cf <- wl[datetime == manual_well1]
-wl_cf <- rbind(wl_cf1, wl_cf2)
 dtw <- read_xlsx("./metadata/manual_dtw_road.xlsx")
 setDT(dtw)
 wl_cf <- dtw[, .(port, manual_wl = wl)][wl_cf, on = "port"]
@@ -232,6 +231,24 @@ wl[, head_masl_cf := head_masl + cf]
 #### Data Subsets ####
 
 wl_sub <- wl
+wl_sub1 <- wl[port == "01"]
+wl_sub2 <- wl[port == "09"]
+
+# find outliers
+#boxplot(wl_sub2$head_masl_cf)
+# z-score method: how many standard deviations away from the mean
+# anyting +3/-3 away from mean exclude
+z_score <- scale(wl_sub2$head_masl_cf) # standardizing the data
+outliers <- wl_sub2$head_masl_cf[abs(z_score) > 3]
+# this shows that there are 464 outliers
+# out of 464: 24 are #s, 440 are NA's
+
+# subset the data to exclude this
+upper_limit <- 422.0000
+lower_limit <- 393.000
+# Assuming `data` is your dataset and `outlier_column` is where the outliers are.
+outliers_removed <- subset(wl_sub2, head_masl_cf <= upper_limit & head_masl_cf >= lower_limit)
+
 
 ###############################################################################
 #### Plots ####
@@ -241,9 +258,36 @@ p_wl <- plot_ly(wl_sub,
                 y = ~head_masl_cf, #or head_masl, or value_m, value_adj, 
                 #head_masl_cf, head_masl_cf_man, etc
                 color = ~port,
-                colors = plasma(10), # 5, 10, 9
+                colors = viridis(2), # 5, 10, 9
                 name = ~port,
                 type = "scatter", mode = "lines")
+
+p_wl1 <- plot_ly(wl_sub1,
+                x = ~datetime,
+                y = ~head_masl_cf, #or head_masl, or value_m, value_adj, 
+                #head_masl_cf, head_masl_cf_man, etc
+                line = list(color = "#472d7b"),
+                #colors = viridis(2), # 5, 10, 9
+                name = ~port,
+                type = "scatter", mode = "lines")
+
+p_wl2 <- plot_ly(wl_sub2,
+                 x = ~datetime,
+                 y = ~head_masl_cf, #or head_masl, or value_m, value_adj, 
+                 #head_masl_cf, head_masl_cf_man, etc
+                 line = list(color = "#28ae80"),
+                 #colors = viridis(2), # 5, 10, 9
+                 name = ~port,
+                 type = "scatter", mode = "lines")
+
+p_wl3 <- plot_ly(outliers_removed,
+                 x = ~datetime,
+                 y = ~head_masl_cf, #or head_masl, or value_m, value_adj, 
+                 #head_masl_cf, head_masl_cf_man, etc
+                 line = list(color = "#28ae80"),
+                 #colors = viridis(2), # 5, 10, 9
+                 name = ~port,
+                 type = "scatter", mode = "lines")
 
 # plot baro
 #p_baro <- plot_ly(wl_sub,
@@ -309,6 +353,45 @@ s1 <- subplot(p_wl, p_baro, p_rain, p_cw, shareX = TRUE, nrows = 4, heights = c(
     legend = list(traceorder = "reversed")
   )
 
+s2 <- subplot(p_wl2, p_wl1, p_baro, p_rain, p_cw, shareX = TRUE, nrows = 5, heights = c(0.3, 0.3, 0.1, 0.15, 0.15))%>%
+  layout(
+    title = list(text = "ELR2-QA: MLS Ports", # ELR1-QA, ELR1-QB, ELR1-QA/QB, ELR2-QA
+                 y = 0.98,
+                 font = list(size = 18)), 
+    xaxis = list(title = "Date and time",
+                 nticks = 20,
+                 tickangle = -45),
+    yaxis = list(title = "Head (m asl)"), 
+                 #range = c(380, 398)), 
+    yaxis2 = list(title = "Pressure (m H20)"), # Δ Pressure (m H20)
+    legend = list(traceorder = "reversed")
+  )
+
+s3 <- subplot(p_wl3, p_wl1, p_baro, p_rain, p_cw, shareX = TRUE, nrows = 5, heights = c(0.3, 0.3, 0.1, 0.15, 0.15))%>%
+  layout(
+    title = list(text = "ELR2-QA: MLS Ports", # ELR1-QA, ELR1-QB, ELR1-QA/QB, ELR2-QA
+                 y = 0.98,
+                 font = list(size = 18)), 
+    xaxis = list(title = "Date and time",
+                 nticks = 20,
+                 tickangle = -45),
+    yaxis = list(title = "Head (m asl)",
+                 range = c(394.5, 397.5)), 
+    yaxis2 = list(title = "Head (m asl)",
+                  range = c(382, 385)), # Δ Pressure (m H20)
+    yaxis3 = list(title = "Pressure (m H20)") # Δ Pressure (m H20)
+    #legend = list(traceorder = "reversed")
+  )
+
 #interpolate <- approx(wl_sub$datetime, wl_sub$baro)
 
+# create DT for vertical head profiles
+#vhp <- wl[datetime %in% as.POSIXct(c("2024-05-12 8:45:00", "2024-05-18 12:25:00"), tz = "UTC")] #old choice
+vhp <- wl_sub[datetime %in% as.POSIXct(c("2024-04-04 19:25:00", "2024-04-04 15:55:00",
+                                         "2024-05-12 12:45:00", "2024-06-19 16:40:00",
+                                         "2024-07-25 14:00:00", "2024-08-09 12:50:00", 
+                                         "2024-09-15 22:15:00", "2024-09-22 21:00:00"), tz = "UTC")]
 
+# shorten table
+vhp <- vhp[, list(datetime, port, head_masl_cf, head_masl)]
+write.csv(vhp, "out/ELR2-QA_vhp_v1.csv")
