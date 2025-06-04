@@ -249,13 +249,55 @@ wl[, head_masl_cf := head_masl + cf]
 #### Data Subsets ####
 
 wl_sub <- wl
+wl_sub1 <- wl[port == "01"]
+wl_sub2 <- wl[port == "02"]
+wl_sub3 <- wl[port == "03"]
+wl_sub4 <- wl[port == "04"]
+wl_sub5 <- wl[port == "05"]
+wl_sub6 <- wl[port == "06"]
+wl_sub7 <- wl[port == "07"]
+wl_sub8 <- wl[port == "08"]
+wl_sub9 <- wl[port == "09"]
+wl_sub10 <- wl[port == "10"]
+
+# find outliers
+boxplot(wl_sub$head_masl_cf)
+# z-score method: how many standard deviations away from the mean
+# anyting +3/-3 away from mean exclude
+z_score <- scale(wl_sub$head_masl_cf) # standardizing the data
+outliers <- wl_sub$head_masl_cf[abs(z_score) > 3]
+# this shows that there are 464 outliers
+# out of 464: 24 are #s, 440 are NA's
+
+# subset the data to exclude this
+upper_limit <- 375.0000
+lower_limit <- 368.000
+# Assuming `data` is your dataset and `outlier_column` is where the outliers are.
+outliers_removed <- subset(wl_sub, head_masl_cf <= upper_limit & head_masl_cf >= lower_limit)
+
+## do it to every port..
+boxplot(wl_sub4$head_masl_cf)
+z_score <- scale(wl_sub4$head_masl_cf) # standardizing the data
+outliers <- wl_sub4$head_masl_cf[abs(z_score) > 3]
+upper_limit <- 371.0000
+lower_limit <- 370.100
+outliers_removed4 <- subset(wl_sub4, head_masl_cf <= upper_limit & head_masl_cf >= lower_limit)
 
 ###############################################################################
 #### Plots ####
 
 p_wl <- plot_ly(wl_sub,
                 x = ~datetime,
-                y = ~head_masl, #or head_masl, or value_m, value_adj, 
+                y = ~head_masl_cf, #or head_masl, or value_m, value_adj, 
+                #head_masl_cf, head_masl_cf_man, etc
+                color = ~port,
+                colors = plasma(10), # 5, 10, 9
+                name = ~port,
+                type = "scatter", mode = "lines")
+
+p_wl1 <- plot_ly(outliers_removed4,
+                x = ~datetime,
+                y = ~head_masl_cf, #or head_masl, or value_m, value_adj, 
                 #head_masl_cf, head_masl_cf_man, etc
                 color = ~port,
                 colors = plasma(10), # 5, 10, 9
@@ -344,4 +386,16 @@ vhp <- wl_sub[datetime %in% as.POSIXct(c("2024-04-05 18:35:00", "2024-04-05 15:5
 # shorten table
 vhp <- vhp[, list(datetime, port, head_masl_cf, head_masl)]
 write.csv(vhp, "out/ELR1-QA_QB_vhp_v1.csv")
+
+vhp <- wl_sub[datetime %in% as.POSIXct(c("2024-04-05 18:30:00", "2024-04-05 15:50:00",
+                                         "2024-05-12 12:40:00", "2024-05-18 18:30:00", 
+                                         "2024-05-31 18:10:00", "2024-06-03 18:00:00",
+                                         "2024-06-25 21:50:00", "2024-07-09 17:30:00", 
+                                         "2024-07-25 14:00:00", "2024-07-25 19:00:00",
+                                         "2024-07-25 21:40:00", "2024-09-15 22:10:00",
+                                         "2024-09-22 21:00:00"), tz = "UTC")]
+
+# shorten table
+vhp <- vhp[, list(datetime, port, head_masl_cf, head_masl)]
+write.csv(vhp, "out/ELR1-QA_QB_vhp_v2.csv")
 

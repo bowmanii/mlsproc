@@ -395,3 +395,12 @@ vhp <- wl_sub[datetime %in% as.POSIXct(c("2024-04-04 19:25:00", "2024-04-04 15:5
 # shorten table
 vhp <- vhp[, list(datetime, port, head_masl_cf, head_masl)]
 write.csv(vhp, "out/ELR2-QA_vhp_v1.csv")
+
+vhp <- wl_sub[datetime %in% as.POSIXct(c("2024-04-04 19:20:00", "2024-04-04 15:50:00",
+                                         "2024-05-12 12:40:00", "2024-06-19 16:40:00",
+                                         "2024-07-25 14:00:00", "2024-08-09 12:50:00", 
+                                         "2024-09-15 22:10:00", "2024-09-22 21:00:00"), tz = "UTC")]
+
+# shorten table
+vhp <- vhp[, list(datetime, port, head_masl_cf, head_masl)]
+write.csv(vhp, "out/ELR2-QA_vhp_v2.csv")
