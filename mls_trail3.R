@@ -276,17 +276,20 @@ lower_limit <- 368.000
 outliers_removed <- subset(wl_sub, head_masl_cf <= upper_limit & head_masl_cf >= lower_limit)
 
 ## do it to every port..
-boxplot(wl_sub4$head_masl_cf)
-z_score <- scale(wl_sub4$head_masl_cf) # standardizing the data
-outliers <- wl_sub4$head_masl_cf[abs(z_score) > 3]
-upper_limit <- 371.0000
-lower_limit <- 370.100
-outliers_removed4 <- subset(wl_sub4, head_masl_cf <= upper_limit & head_masl_cf >= lower_limit)
+boxplot(wl_sub3$head_masl_cf)
+z_score <- scale(wl_sub3$head_masl_cf) # standardizing the data
+outliers <- wl_sub3$head_masl_cf[abs(z_score) > 3]
+upper_limit <- 371.000
+lower_limit <- 368.600
+outliers_removed3 <- subset(wl_sub3, head_masl_cf <= upper_limit & head_masl_cf >= lower_limit)
+
+wl_sub_outliers <- rbind(outliers_removed1, outliers_removed2, outliers_removed3, outliers_removed4, 
+                         outliers_removed5, outliers_removed7, outliers_removed8, outliers_removed10)
 
 ###############################################################################
 #### Plots ####
 
-p_wl <- plot_ly(wl_sub,
+p_wl <- plot_ly(wl_sub_outliers, #wl_sub
                 x = ~datetime,
                 y = ~head_masl_cf, #or head_masl, or value_m, value_adj, 
                 #head_masl_cf, head_masl_cf_man, etc
@@ -295,7 +298,7 @@ p_wl <- plot_ly(wl_sub,
                 name = ~port,
                 type = "scatter", mode = "lines")
 
-p_wl1 <- plot_ly(outliers_removed4,
+p_wl1 <- plot_ly(outliers_removed3,
                 x = ~datetime,
                 y = ~head_masl_cf, #or head_masl, or value_m, value_adj, 
                 #head_masl_cf, head_masl_cf_man, etc
