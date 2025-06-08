@@ -42,8 +42,8 @@ loc <- read_xlsx("./metadata/transducer_locations_mls.xlsx", na = "NA")
 setDT(loc)
 
 # redefine DT to only include for ELR1-QB
-loc <- loc[well == "ELR1-QB" | serial == "213655" | well == "ELR1-QA"]
-#loc <- loc[well == "ELR2-QA" | serial == "213655"]
+#loc <- loc[well == "ELR1-QB" | serial == "213655" | well == "ELR1-QA"]
+loc <- loc[well == "ELR2-QA" | serial == "213655"]
 
 # list all file names from "data" folder, return full file path
 fn <- list.files(file_dir, full.names = TRUE)
@@ -60,12 +60,12 @@ read_csv <- function(x) {
 }
 
 # read data
-wl <- rbindlist(sapply(fn[c(6)], read_csv, simplify = FALSE, USE.NAMES = TRUE), idcol = TRUE) #QA/QB
+wl <- rbindlist(sapply(fn[c(5)], read_csv, simplify = FALSE, USE.NAMES = TRUE), idcol = TRUE) #QA/QB
 # rename columns
 colnames(wl) <- c("file_name", "datetime", "value_cm", "temp")
 
 # read transducer files using Kennel's package
-baro <- rsk::read_rsk(fn[c(13)],
+baro <- rsk::read_rsk(fn[c(2)],
                       return_data_table = TRUE,
                       include_params = c('file_name'),
                       simplify_names = TRUE,
@@ -87,11 +87,10 @@ baro[, value_m := value * dbar_to_m]
 
 # combine dt's while also calculating the mean value of each
 wl_baro <- baro[,.(datetime, baro = value_m - mean(value_m))][wl[, .(datetime, value = value - mean(value))], on = "datetime", nomatch = 0]
-
 # subset date range
 # goal = times where there is no pumping, its "stable"
-wl_baro <- wl_baro[between(datetime, as.POSIXct("2024-04-17", tz = "UTC"), as.POSIXct("2024-04-24", tz = "UTC"))] #R1-R1_1, R1-R2_1
-#wl_baro <- wl_baro[between(datetime, as.POSIXct("2024-07-14", tz = "UTC"), as.POSIXct("2024-07-19", tz = "UTC"))] #R1-R1_2, R1-R2_2
+wl_baro <- wl_baro[between(datetime, as.POSIXct("2024-04-17", tz = "UTC"), as.POSIXct("2024-04-24", tz = "UTC"))] 
+#wl_baro <- wl_baro[between(datetime, as.POSIXct("2024-07-14", tz = "UTC"), as.POSIXct("2024-07-19", tz = "UTC"))] 
 
 # visualize the data
 # dependent variable = wl pressure
@@ -100,14 +99,6 @@ wl_baro <- wl_baro[between(datetime, as.POSIXct("2024-04-17", tz = "UTC"), as.PO
 hydrorecipes::be_visual(wl_baro,
                         dep = "value", ind = "baro", time = "datetime",
                         be_tests = seq(0, 1.0, 0.01), inverse = FALSE)
-
-
-
-
-
-
-
-
 
 
 
