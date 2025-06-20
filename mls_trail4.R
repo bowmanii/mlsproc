@@ -269,6 +269,9 @@ wl <- wl_cf[, .(serial, cf = cf)][wl, on = "serial"]
 # wl corrected
 wl[, head_masl_cf := head_masl + cf]
 
+# add midpoint to port name
+wl[, portloc := paste(paste(port, midpoint, sep = " - "), "mbtoc")]
+
 #manual_well3 <- as.POSIXct("2024-10-22 15:00:00", tz = "UTC")
 #wl_cf3 <- wl[datetime == manual_well3]
 
@@ -279,7 +282,7 @@ wl_sub <- wl
 wl_sub1 <- wl[port == "01"]
 wl_sub2 <- wl[port == "02"]
 wl_sub3 <- wl[port == "03"]
-wl_sub4 <- wl[port == "04"]
+#wl_sub4 <- wl[port == "04"] #exclude for now
 wl_sub5 <- wl[port == "05"]
 wl_sub6 <- wl[port == "06"]
 wl_sub7 <- wl[port == "07"]
@@ -325,12 +328,12 @@ upper_limit3 <- 371.000
 lower_limit3 <- 368.600
 outliers_removed3 <- subset(wl_sub3, head_masl_cf <= upper_limit3 & head_masl_cf >= lower_limit3)
 
-boxplot(wl_sub4$head_masl_cf)
-z_score4 <- scale(wl_sub4$head_masl_cf) # standardizing the data
-outliers4 <- wl_sub4$head_masl_cf[abs(z_score) > 3]
-upper_limit4 <- 371.000
-lower_limit4 <- 370.100
-outliers_removed4 <- subset(wl_sub4, head_masl_cf <= upper_limit4 & head_masl_cf >= lower_limit4)
+#boxplot(wl_sub4$head_masl_cf)
+#z_score4 <- scale(wl_sub4$head_masl_cf) # standardizing the data
+#outliers4 <- wl_sub4$head_masl_cf[abs(z_score) > 3]
+#upper_limit4 <- 371.000
+#lower_limit4 <- 370.100
+#outliers_removed4 <- subset(wl_sub4, head_masl_cf <= upper_limit4 & head_masl_cf >= lower_limit4)
 
 boxplot(wl_sub5$head_masl_cf)
 z_score5 <- scale(wl_sub5$head_masl_cf) # standardizing the data
@@ -360,7 +363,7 @@ upper_limit10 <- 375.000
 lower_limit10 <- 374.000
 outliers_removed10 <- subset(wl_sub10, head_masl_cf <= upper_limit10 & head_masl_cf >= lower_limit10)
 
-wl_sub_outliers <- rbind(outliers_removed1, outliers_removed2, outliers_removed3, outliers_removed4, 
+wl_sub_outliers <- rbind(outliers_removed1, outliers_removed2, outliers_removed3, 
                          outliers_removed5, outliers_removed7, outliers_removed8, outliers_removed10)
 
 ###############################################################################
@@ -372,7 +375,7 @@ p_wl <- plot_ly(wl_sub_outliers, #wl_sub
                 #head_masl_cf, head_masl_cf_man, etc
                 color = ~port,
                 colors = plasma(10), # 5, 10, 9
-                name = ~port,
+                name = ~portloc,
                 type = "scatter", mode = "lines")
 
 p_wl1 <- plot_ly(outliers_removed1,

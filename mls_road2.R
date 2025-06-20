@@ -486,11 +486,11 @@ s4 <- subplot(p_wl_out9, p_wl_out1, p_baro, p_rain, scw, shareX = TRUE, nrows = 
                  range = c(394.5, 397.5)), 
     yaxis2 = list(title = "Head (m asl)",
                   range = c(382, 385)), # Δ Pressure (m H20)
-    yaxis3 = list(title = "Pressure<br>(mH20)",
-                  titlefont = list(size = 12)),
+    yaxis3 = list(title = "Pressure<br>(mH20)"),
+                  #titlefont = list(size = 12)),
                   #position = 0),
-    yaxis4 = list(title = "Precip.<br>(mm)",
-                  titlefont = list(size = 12)),
+    yaxis4 = list(title = "Precip.<br>(mm)"),
+                  #titlefont = list(size = 12)),
                   #position = 0.8),
     yaxis6 = list(title = "Avg Flow (m3/hr)")
     #legend = list(traceorder = "reversed")
