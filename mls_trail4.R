@@ -69,11 +69,11 @@ dbar_to_m <- 1.0199773339984 # rbr data reads pressure in dbar, convert to m of 
 
 # pumping data for sealed holes
 # 2023 data. Waiting for 2024 data
-cw_pump_start1 <- as.POSIXct("2024-03-29 21:00:00", tz = "UTC")
+cw_pump_start1 <- as.POSIXct("2024-04-01 19:00:00", tz = "UTC")
 cw_pump_end1 <- as.POSIXct("2024-10-22 18:00:00", tz = "UTC")
 
 # climate data
-cw_rain_start1 <- as.POSIXct("2024-03-29 21:00:00", tz = "UTC")
+cw_rain_start1 <- as.POSIXct("2024-04-01 19:00:00", tz = "UTC")
 cw_rain_end1 <- as.POSIXct("2024-10-22 18:00:00", tz = "UTC")
 
 # for blended calibration
@@ -231,7 +231,9 @@ pr_b[, file_name := basename(file_name)]
 pr_b[, c("variable") := NULL]
 # convert to m H20
 pr_b[, value_m := value * dbar_to_m]
-pr_b <- pr_b[datetime %between% c(cw_pump_start1, cw_pump_end1)]
+
+# only run at the very end for the graphs, or else screws up other calcs along the way
+#pr_b <- pr_b[datetime %between% c(cw_pump_start1, cw_pump_end1)]
 
 # create wl dt
 wl <- pr[!port %in% c("baro")]
@@ -469,8 +471,8 @@ s1 <- subplot(p_wl, p_baro, p_rain, scw, shareX = TRUE, nrows = 4, heights = c(0
                  tickangle = -45),
     yaxis = list(title = "Head (m asl)"), 
                 # range = c(368, 375)), 
-    yaxis2 = list(title = "Pres.(mH20)"), # Δ Pressure (m H20)
-    yaxis3 = list(title = "Precip.(mm)"),
+    yaxis2 = list(title = "Pressure<br>(mH20)"), # Δ Pressure (m H20)
+    yaxis3 = list(title = "Precip.<br>(mm)"),
     yaxis5 = list(title = "Avg Flow (m3/hr)"),
     legend = list(traceorder = "reversed")
   )
